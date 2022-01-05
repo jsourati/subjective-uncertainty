@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def collect_parsed_findings(parsed_df):
+def collect_parsed_categories(parsed_df, category='RESULT'):
     """Post-processing the result of parsing the abstracts through Prabhakaran's method;
     collecting out the extracted sentences that belong to the "results" into a dictionary 
     with keys as the distinct PMIDs and values as the extracted findings of them
@@ -22,9 +22,20 @@ def collect_parsed_findings(parsed_df):
             if i>0:
                 results[pmid] = pmid_results
             pmid = row[1]
-            pmid_results = []
+            
+            if category=='ALL':
+                pmid_results = {}
+            else:
+                pmid_results = []
         else:
-            if rtype=='RESULT':
+            # if category is 'ALL' consider all the statements, and
+            # enter them into the place in the result dictionary
+            if category=='ALL':
+                if rtype in pmid_results:
+                    pmid_results[rtype] += [row[1]]
+                else:
+                    pmid_results[rtype] = [row[1]]
+            elif rtype==category:
                 pmid_results += [row[1]]
 
         # in the last iteration, update the results for the last PMID
