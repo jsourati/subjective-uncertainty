@@ -68,7 +68,7 @@ def measure_uncertainty_df_abstracts(df, sub_unc, block_size, column='abstract')
         sents = sum(sents, [])
 
         pmids = [df.iloc[lb+i].pmid
-                 for i,x in enumerate(df.iloc[lb:lb+block_size,].abstract) if len(x)>0]
+                 for i,x in enumerate(df.iloc[lb:lb+block_size,][column]) if len(x)>0]
 
         unc = sub_unc.estimator(sents)
 
