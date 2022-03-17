@@ -7,9 +7,9 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def collect_parsed_categories(parsed_df, category='RESULT'):
+def collect_parsed_categories(parsed_df, category="RESULT"):
     """Post-processing the result of parsing the abstracts through Prabhakaran's method;
-    collecting out the extracted sentences that belong to the "results" into a dictionary 
+    collecting out the extracted sentences that belong to the "results" into a dictionary
     with keys as the distinct PMIDs and values as the extracted findings of them
     """
     results = {}
@@ -17,35 +17,35 @@ def collect_parsed_categories(parsed_df, category='RESULT'):
     for i in tqdm_list:
         row = parsed_df.iloc[i]
         rtype = row[0]
-        if rtype=='ABSTRACT':
+        if rtype == "ABSTRACT":
             # if we are not at the first iteration, the results should be updated
-            if i>0:
+            if i > 0:
                 results[pmid] = pmid_results
             pmid = row[1]
-            
-            if category=='ALL':
+
+            if category == "ALL":
                 pmid_results = {}
             else:
                 pmid_results = []
         else:
             # if category is 'ALL' consider all the statements, and
             # enter them into the place in the result dictionary
-            if category=='ALL':
+            if category == "ALL":
                 if rtype in pmid_results:
                     pmid_results[rtype] += [row[1]]
                 else:
                     pmid_results[rtype] = [row[1]]
-            elif rtype==category:
+            elif rtype == category:
                 pmid_results += [row[1]]
 
         # in the last iteration, update the results for the last PMID
-        if i==len(parsed_df)-1:
+        if i == len(parsed_df) - 1:
             results[pmid] = pmid_results
 
     return results
 
 
-def measure_uncertainty_df_abstracts(df, sub_unc, block_size, column='abstract'):
+def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstract"):
     """Measuring subjective uncertainty in the abstracts/findings saved within a dataframe
 
     The input dataframe should have at least columns 'abstract' and 'pmid'. The
@@ -53,51 +53,49 @@ def measure_uncertainty_df_abstracts(df, sub_unc, block_size, column='abstract')
     as the input batch when running the uncertainty model.
     """
 
-    #df.fillna('',inplace=True)
-
     lb = 0
     pmids_lst = []
     unc_lst = []
     tqdm_list = tqdm(range(len(df)), position=0, leave=True)
-    while lb<len(df):
-        abst = [x for x in df.iloc[lb:lb+block_size,][column] if len(x)>0]
-        # list of lists
-        sents = [nltk.sent_tokenize(x) for x in abst]
-        nsents = [len(x) for x in sents]
-        # list
-        sents = sum(sents, [])
 
-        pmids = [df.iloc[lb+i].pmid
-                 for i,x in enumerate(df.iloc[lb:lb+block_size,][column]) if len(x)>0]
+    agg = []
+    for lb in range(0, df.shape[0], block_size):
+        block = df.iloc[lb : lb + block_size].copy()
+        block = block[
+            (block[text_column].apply(lambda x: (x != "")))
+            & (block[text_column].notnull())
+        ].copy()
+        abst = block[text_column]
+        pmids = block["pmid"]
 
-        unc = sub_unc.estimator(sents)
+        sents = [[(j, y) for j, y in enumerate(nltk.sent_tokenize(x))] for x in abst]
+        flat_list = [
+            (pmid, j, y) for pmid, sublist in zip(pmids, sents) for j, y in sublist
+        ]
+        enu_flat_list = pd.DataFrame(
+            flat_list,
+            columns=["pmid", "i_phrase", "sentence"],
+        )
+        unc = sub_unc.estimator(enu_flat_list["sentence"].to_list())
+        dfa = pd.concat([enu_flat_list, unc], axis=1)
 
-        for i in range(len(nsents)):
-            _lb = int(np.sum(nsents[:i]))
-            _ub = int(np.sum(nsents[:i+1]))
-            summ = sub_unc.summarizer(unc[_lb:_ub])
-            #if inplace:
-            #    df.loc[df['pmid']==pmids[i],['zero_shot_su']]= avg
+        agg += [dfa]
+        tqdm_list.update(block.shape[0])
 
-            pmids_lst += [pmids[i]]
-            unc_lst += [summ]
-
-        lb += block_size
-        tqdm_list.update(min(block_size,len(df)-lb+block_size))
-
-    return pmids_lst, unc_lst
+    dft = pd.concat(agg)
+    return dft
 
 
 def eval_zero_shot_biocertainty(sub_unc):
-    
-    TRAIN_FILE = 'Complete_statements_training_set__ML_model.csv'
 
-    stopwords = nltk.corpus.stopwords.words('english')
-    
-    texts = []   # list of text samples
+    TRAIN_FILE = "Complete_statements_training_set__ML_model.csv"
+
+    stopwords = nltk.corpus.stopwords.words("english")
+
+    texts = []  # list of text samples
     labels_index = {}  # dictionary mapping label name to numeric id
     labels = []  # list of label ids
-    fin = codecs.open(TRAIN_FILE, "r", encoding='utf8')
+    fin = codecs.open(TRAIN_FILE, "r", encoding="utf8")
     for line in fin:
         sent, certain = line.strip().split("\t")
         # sent = [x for x in nltk.word_tokenize(sent) if x not in stopwords]
@@ -107,8 +105,9 @@ def eval_zero_shot_biocertainty(sub_unc):
 
     P = sub_unc.estimator(texts)
 
-    intervals = np.linspace(0,1,len(np.unique(labels)))
-    inferred_labels =  [np.min([i for i in range(len(intervals)) if p<intervals[i]])
-                        for p in P]
+    intervals = np.linspace(0, 1, len(np.unique(labels)))
+    inferred_labels = [
+        np.min([i for i in range(len(intervals)) if p < intervals[i]]) for p in P
+    ]
 
     return texts, labels, inferred_labels
