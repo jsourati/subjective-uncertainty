@@ -11,8 +11,8 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import model_from_json
 
-# path = os.path.join(os.getcwd(), "certainty-estimator")
-# sys.path.insert(0, path)
+path = os.path.join(os.getcwd(), "certainty-estimator")
+sys.path.insert(0, path)
 from certainty_estimator.predict_certainty import CertaintyEstimator
 
 PATH_TO_LSTM = "../BioCertainty/data/"
@@ -25,6 +25,7 @@ class SubjectiveUncertainty(object):
         if utype == "zero-shot":
             device = kwargs.get("device", -1)
             self.summarizer = kwargs.get("summarizer", np.max)
+            self.model_path = kwargs.get("model_path", "facebook/bart-large-mnli")
             self.keywords = kwargs.get(
                 "keywords",
                 [
@@ -40,7 +41,7 @@ class SubjectiveUncertainty(object):
 
             self.model = pipeline(
                 "zero-shot-classification",
-                model="facebook/bart-large-mnli",
+                model=self.model_path,
                 device=device,
             )
             self.estimator = lambda sents: zero_shot_estimator(
@@ -129,7 +130,11 @@ def lstm_estimator(sents, tokenizer, model, max_seq_len):
 
 def zero_shot_estimator(sents, model, keywords):
 
-    res = model(sents, keywords, multi_label=True)
+    res = model(sents, keywords, multi_label=False)
 
-    scores = pd.DataFrame(np.stack([x["scores"] for x in res]), columns=keywords)
+
+    scores = np.array([[np.array(x['scores'])[np.array(x['labels'])==y][0]
+                        for y in keywords]
+                       for x in res])
+    scores = pd.DataFrame(scores, columns=keywords)
     return scores
