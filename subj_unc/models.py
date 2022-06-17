@@ -1,4 +1,5 @@
 import os, sys
+from os.path import join, abspath, dirname
 import nltk
 import codecs
 import numpy as np
@@ -11,7 +12,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import model_from_json
 
-path = os.path.join(os.getcwd(), "certainty-estimator")
+path = join(dirname(dirname(__file__)), "certainty-estimator")
 sys.path.insert(0, path)
 from certainty_estimator.predict_certainty import CertaintyEstimator
 
