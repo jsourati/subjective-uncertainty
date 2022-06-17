@@ -12,35 +12,41 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
     collecting out the extracted sentences that belong to the "results" into a dictionary
     with keys as the distinct PMIDs and values as the extracted findings of them
     """
-    results = {}
+
+    cats = ['BACKGROUND','OBJECTIVE', 'METHOD', 'RESULT', 'CONCLUSION']
+
+    assert category in cats+['ALL'], "Input is not among the available categories."
+    
+    results = {**{'pmid': []}, **{x: [] for x in cats}}
     tqdm_list = tqdm(range(len(parsed_df)), position=0, leave=True)
     for i in tqdm_list:
         row = parsed_df.iloc[i]
         rtype = row[0]
+        
         if rtype == "ABSTRACT":
-            # if we are not at the first iteration, the results should be updated
-            if i > 0:
-                results[pmid] = pmid_results
+            if i>0:
+                # insert the results into the main dictionary
+                results['pmid'] += [pmid]
+                for cat in cats:
+                    results[cat] += [entry_dict[cat].strip()]
             pmid = row[1]
-
-            if category == "ALL":
-                pmid_results = {}
-            else:
-                pmid_results = []
+            entry_dict = {x:'' for x in cats}
+        elif rtype not in cats:
+            # continue if the category is not among the possible ones
+            # For instance, there might be 'O'
+            continue
+            
         else:
             # if category is 'ALL' consider all the statements, and
             # enter them into the place in the result dictionary
             if category == "ALL":
-                if rtype in pmid_results:
-                    pmid_results[rtype] += [row[1]]
-                else:
-                    pmid_results[rtype] = [row[1]]
+                entry_dict[rtype] += ' '+row[1]
             elif rtype == category:
-                pmid_results += [row[1]]
+                entry_dict[rtype] += ' '+row[1]
 
-        # in the last iteration, update the results for the last PMID
-        if i == len(parsed_df) - 1:
-            results[pmid] = pmid_results
+    if category != 'ALL':
+        for cat in set(cats)-{category}:
+            del results[cat]
 
     return results
 
