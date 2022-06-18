@@ -72,15 +72,15 @@ def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstr
             & (block[text_column].notnull())
         ].copy()
         abst = block[text_column]
-        pmids = block["pmid"]
+        pids = block["paperid"]
 
         sents = [[(j, y) for j, y in enumerate(nltk.sent_tokenize(x))] for x in abst]
         flat_list = [
-            (pmid, j, y) for pmid, sublist in zip(pmids, sents) for j, y in sublist
+            (pid, j, y) for pid, sublist in zip(pids, sents) for j, y in sublist
         ]
         enu_flat_list = pd.DataFrame(
             flat_list,
-            columns=["pmid", "i_phrase", "sentence"],
+            columns=["paperid", "iphrase", "sentence"],
         )
         unc = sub_unc.estimator(enu_flat_list["sentence"].to_list())
         dfa = pd.concat([enu_flat_list, unc], axis=1)
