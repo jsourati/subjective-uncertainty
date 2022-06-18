@@ -32,7 +32,7 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
             pmid = row[1]
             entry_dict = {x:'' for x in cats}
         elif rtype not in cats:
-            # continue if the category is not among the possible ones
+            # continue if the row-type is not among the possible ones
             # For instance, there might be 'O'
             continue
             
@@ -51,7 +51,7 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
     return results
 
 
-def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstract"):
+def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstract", save_path=None):
     """Measuring subjective uncertainty in the abstracts/findings saved within a dataframe
 
     The input dataframe should have at least columns 'abstract' and 'pmid'. The
@@ -87,6 +87,10 @@ def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstr
 
         agg += [dfa]
         tqdm_list.update(block.shape[0])
+
+        if save_path is not None:
+            header = True if lb==0 else False
+            dfa.to_csv(save_path, mode='a', sep='\t', header=header)
 
     dft = pd.concat(agg)
     return dft
