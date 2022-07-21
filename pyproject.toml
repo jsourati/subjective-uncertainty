@@ -17,6 +17,7 @@ keras = "^2.8.0"
 tensorflow = "^2.8.0"
 black = "^22.1.0"
 certainty-estimator = {git = "https://github.com/Jiaxin-Pei/certainty-estimator.git"}
+seaborn = "^0.11.2"
 
 
 [build-system]
