@@ -1,4 +1,5 @@
 import os, sys
+import pdb
 from os.path import join, abspath, dirname
 import nltk
 import codecs
@@ -12,10 +13,11 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import model_from_json
 
-path = join(dirname(dirname(__file__)), "certainty-estimator")
-sys.path.insert(0, path)
+path_certest = join(dirname(dirname(__file__)), "certainty-estimator")
+sys.path.insert(0, path_certest)
 from certainty_estimator.predict_certainty import CertaintyEstimator
 
+PATH_TO_SCIBERT = join(path_certest, "model_cache/pedropei-sentence/")
 PATH_TO_LSTM = "../BioCertainty/data/"
 STOPWORDS = nltk.corpus.stopwords.words("english")
 
@@ -57,9 +59,7 @@ class SubjectiveUncertainty(object):
             )
 
         elif utype == "scibert":
-            os.chdir("../certainty-estimator")
-            self.cert_estimator = CertaintyEstimator("sentence-level")
-            os.chdir("../..")
+            self.cert_estimator = CertaintyEstimator(PATH_TO_SCIBERT)
 
             device = kwargs.get("device", -1)
             self.summarizer = kwargs.get("summarizer", np.min)

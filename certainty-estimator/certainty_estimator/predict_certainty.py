@@ -7,16 +7,32 @@ import math
 
 
 class CertaintyEstimator(object):
-    def __init__(self, task = 'sentence-level', cuda = False, use_auth_token=False):
+    def __init__(self, model_path, cuda = False, use_auth_token=False):
+
+        # only using the sentence-level at this time
+        self.task = 'sentence-level'
         
-        self.task = task
-        
-        if task == 'sentence-level':
-            model_path = 'pedropei/sentence-level-certainty'
-            self.tokenizer = AutoTokenizer.from_pretrained(model_path, num_labels=1, output_attentions=False,
-                                                         output_hidden_states=False, cache_dir = './model_cache', use_auth_token=use_auth_token)
-            self.model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=1,
-                                     output_attentions=False, output_hidden_states=False,cache_dir = './model_cache',use_auth_token=use_auth_token)
+        if self.task == 'sentence-level':
+            # assuming the files are already downloaded to local directories
+            # (to be used with HPC compute nodes that cannot connect to internet)
+            # If the files are not downloaded locally, either download them beforehand,
+            # or set local_files_only to False (if the machine can get online) 
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path,
+                                                           local_files_only=True,
+                                                           num_labels=1,
+                                                           output_attentions=False,
+                                                           output_hidden_states=False,
+                                                           use_auth_token=use_auth_token)
+            
+            self.model = AutoModelForSequenceClassification.from_pretrained(
+                model_path,
+                local_files_only=True,
+                num_labels=1,
+                output_attentions=False,
+                output_hidden_states=False,
+                use_auth_token=use_auth_token
+            )
+            
         elif task == 'aspect-level':
             model_path = 'pedropei/aspect-level-certainty'
             self.tokenizer = AutoTokenizer.from_pretrained(model_path, num_labels=3, output_attentions=False,
