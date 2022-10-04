@@ -70,7 +70,9 @@ class SubjectiveUncertainty(object):
                 self.cert_estimator.cuda = True
 
             self.model = self.cert_estimator.model
-            self.estimator = lambda sents: self.cert_estimator.predict(sents)
+            self.estimator = lambda sents: pd.DataFrame(
+                self.cert_estimator.predict(sents), columns=['uncertain']
+                )
 
 
 def load_lstm():
