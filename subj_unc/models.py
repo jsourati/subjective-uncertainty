@@ -18,7 +18,7 @@ sys.path.insert(0, path_certest)
 from certainty_estimator.predict_certainty import CertaintyEstimator
 
 PATH_TO_SCIBERT = join(path_certest, "model_cache/pedropei-sentence/")
-PATH_TO_LSTM = "../BioCertainty/data/"
+PATH_TO_LSTM = join(dirname(dirname(__file__)), "BioCertainty/data/")
 STOPWORDS = nltk.corpus.stopwords.words("english")
 
 
