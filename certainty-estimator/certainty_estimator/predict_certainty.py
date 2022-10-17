@@ -33,7 +33,7 @@ class CertaintyEstimator(object):
                 use_auth_token=use_auth_token
             )
             
-        elif task == 'aspect-level':
+        elif self.task == 'aspect-level':
             model_path = 'pedropei/aspect-level-certainty'
             self.tokenizer = AutoTokenizer.from_pretrained(model_path, num_labels=3, output_attentions=False,
                                                  output_hidden_states=False, cache_dir = './model_cache', use_auth_token=use_auth_token)

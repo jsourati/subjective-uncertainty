@@ -135,9 +135,11 @@ def zero_shot_estimator(sents, model, keywords):
 
     res = model(sents, keywords, multi_label=False)
 
-
-    scores = np.array([[np.array(x['scores'])[np.array(x['labels'])==y][0]
-                        for y in keywords]
-                       for x in res])
+    scores = np.array(
+        [
+            [np.array(x["scores"])[np.array(x["labels"]) == y][0] for y in keywords]
+            for x in res
+        ]
+    )
     scores = pd.DataFrame(scores, columns=keywords)
     return scores

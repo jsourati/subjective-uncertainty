@@ -1,5 +1,3 @@
-import os, sys
-import pdb
 import nltk
 import codecs
 import numpy as np
@@ -13,7 +11,7 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
     with keys as the distinct PMIDs and values as the extracted findings of them
     """
 
-    cats = ['BACKGROUND','OBJECTIVE', 'METHOD', 'RESULT', 'CONCLUSION']
+    cats = ["BACKGROUND", "OBJECTIVE", "METHOD", "RESULT", "CONCLUSION"]
 
     assert category in cats+['ALL'], "Input is not among the available categories."
     
@@ -22,9 +20,9 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
     for i in tqdm_list:
         row = parsed_df.iloc[i]
         rtype = row[0]
-        
+
         if rtype == "ABSTRACT":
-            if i>0:
+            if i > 0:
                 # insert the results into the main dictionary
                 results['paperid'] += [paperid]
                 for cat in cats:
@@ -35,23 +33,25 @@ def collect_parsed_categories(parsed_df, category="RESULT"):
             # continue if the row-type is not among the possible ones
             # For instance, there might be 'O'
             continue
-            
+
         else:
             # if category is 'ALL' consider all the statements, and
             # enter them into the place in the result dictionary
             if category == "ALL":
-                entry_dict[rtype] += ' '+row[1]
+                entry_dict[rtype] += " " + row[1]
             elif rtype == category:
-                entry_dict[rtype] += ' '+row[1]
+                entry_dict[rtype] += " " + row[1]
 
-    if category != 'ALL':
-        for cat in set(cats)-{category}:
+    if category != "ALL":
+        for cat in set(cats) - {category}:
             del results[cat]
 
     return results
 
 
-def measure_uncertainty_df_abstracts(df, sub_unc, block_size, text_column="abstract", save_path=None):
+def measure_uncertainty_df_abstracts(
+    df, sub_unc, block_size, text_column="abstract", save_path=None
+):
     """Measuring subjective uncertainty in the abstracts/findings saved within a dataframe
 
     The input dataframe should have at least columns 'abstract' and 'pmid'. The

@@ -18,6 +18,10 @@ tensorflow = "^2.8.0"
 black = "^22.1.0"
 certainty-estimator = {git = "https://github.com/Jiaxin-Pei/certainty-estimator.git"}
 seaborn = "^0.11.2"
+scikit-learn = "^1.1.2"
+spacy = "^3.4.1"
+networkx = "^2.8.7"
+pygraphviz = "^1.10"
 
 
 [build-system]
